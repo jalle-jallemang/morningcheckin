@@ -3,8 +3,10 @@ Home Assistant "no movement" check-in with motion sensor
 
 Morning Check-In Safety System
 A simple, privacy-first Home Assistant automation that monitors morning activity using a motion sensor and alerts designated contacts if no motion is detected during a scheduled time window.
+
 Overview
 This system is designed for people who live alone or want an extra layer of safety. If no motion is detected during a configurable morning window, designated friends or family members automatically receive a push notification suggesting they check in. All automations and data run locally on the user's own Home Assistant server. Remote dashboard access for contacts uses an encrypted Home Assistant Cloud connection, but no data is stored externally.
+
 Features
 
 Motion-based check-in monitoring
