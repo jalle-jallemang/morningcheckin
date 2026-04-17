@@ -36,3 +36,9 @@ templates.yaml — template sensors (if applicable)
 
 Contributing
 This is an open project and help is welcome! If you have experience with Home Assistant and are interested in contributing — particularly around the contact onboarding flow — please open an issue or reach out via the Home Assistant Community Forums.
+
+## Screenshots
+
+![Dashboard top](images/dashboard-top.png)
+![Dashboard bottom](images/dashboard-bottom.png)
+![Friends automation concept](images/friends-automation-concept.png)
