@@ -1,0 +1,10 @@
+manual_morning_check_in:
+  alias: Manual Morning Check-In
+  sequence:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.last_morning_motion
+    data:
+      timestamp: '{{ now().timestamp() }}'
+  mode: single
+  icon: mdi:check-circle
