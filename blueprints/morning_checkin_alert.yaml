@@ -1,0 +1,77 @@
+blueprint:
+  name: Morning Check-In Alert - Scheduled
+  description: Checks once a day, at your configured end time, whether the monitored person has been still for too long, and sends a push notification plus a persistent dashboard notification if so.
+  domain: automation
+  input:
+    last_motion_helper:
+      name: Last Motion Helper
+      description: The input_datetime helper that records the most recent qualifying motion.
+      selector:
+        entity:
+          domain: input_datetime
+    vacation_mode_toggle:
+      name: Vacation Mode Toggle
+      description: An input_boolean that, when on, pauses alerts entirely.
+      selector:
+        entity:
+          domain: input_boolean
+    weekday_end:
+      name: Weekday Window End
+      selector:
+        entity:
+          domain: input_datetime
+    weekend_end:
+      name: Weekend Window End
+      selector:
+        entity:
+          domain: input_datetime
+    notify_targets:
+      name: Notification Recipients
+      description: Up to three phones that should receive the alert.
+      selector:
+        entity:
+          domain: notify
+          multiple: true
+    alert_message:
+      name: Alert Message
+      description: The text sent in the push notification and dashboard alert.
+      default: No motion detected during the check-in window.
+      selector:
+        text: {}
+variables:
+  weekday_end_entity: !input weekday_end
+  weekend_end_entity: !input weekend_end
+  last_motion_entity: !input last_motion_helper
+  message_text: !input alert_message
+triggers:
+  - trigger: time_pattern
+    minutes: "*"
+conditions:
+  - condition: state
+    entity_id: !input vacation_mode_toggle
+    state: "off"
+  - condition: template
+    value_template: >
+      {% set is_weekend = now().weekday() in [5, 6] %}
+      {% if is_weekend %}
+        {% set end_time = states(weekend_end_entity) %}
+      {% else %}
+        {% set end_time = states(weekday_end_entity) %}
+      {% endif %}
+      {{ now().strftime('%-I:%M %p') == end_time or now().strftime('%H:%M:%S') == end_time }}
+  - condition: template
+    value_template: >
+      {% set last_motion = state_attr(last_motion_entity, 'timestamp') %}
+      {{ last_motion and (now().timestamp() - last_motion) > 7200 }}
+actions:
+  - action: notify.send_message
+    target:
+      entity_id: !input notify_targets
+    data:
+      title: Scheduled Check-In Alert
+      message: "{{ message_text }}"
+  - action: persistent_notification.create
+    data:
+      title: Scheduled Check-In Alert
+      message: >
+        {{ message_text }} ({{ now().strftime('%d %b %Y at %H:%M') }})
