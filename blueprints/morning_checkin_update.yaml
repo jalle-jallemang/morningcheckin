@@ -1,14 +1,11 @@
 blueprint:
   name: Morning Check-In - Update Last Motion
-  description: >
-    Records a timestamp whenever motion is detected on any selected sensor,
-    but only during a configurable morning window (separate weekday/weekend
-    start and end times, read from dashboard-controlled input_datetime helpers).
+  description: Records a timestamp whenever motion is detected on any selected sensor, but only during a configurable morning window read from dashboard-controlled input_datetime helpers.
   domain: automation
   input:
     motion_sensors:
       name: Motion Sensors
-      description: Every sensor whose motion should count as "morning activity" for this check-in.
+      description: Every sensor whose motion should count as morning activity for this check-in.
       selector:
         entity:
           domain: binary_sensor
@@ -39,16 +36,30 @@ blueprint:
       selector:
         entity:
           domain: input_datetime
-
 variables:
   weekday_start_entity: !input weekday_start
   weekday_end_entity: !input weekday_end
   weekend_start_entity: !input weekend_start
   weekend_end_entity: !input weekend_end
-
 triggers:
   - trigger: state
     entity_id: !input motion_sensors
     to: "on"
-
-conditio
+conditions:
+  - condition: template
+    value_template: >
+      {% set is_weekend = now().weekday() in [5, 6] %}
+      {% if is_weekend %}
+        {% set start_time = states(weekend_start_entity) %}
+        {% set end_time = states(weekend_end_entity) %}
+      {% else %}
+        {% set start_time = states(weekday_start_entity) %}
+        {% set end_time = states(weekday_end_entity) %}
+      {% endif %}
+      {{ now().strftime('%H:%M:%S') >= start_time and now().strftime('%H:%M:%S') <= end_time }}
+actions:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: !input last_motion_helper
+    data:
+      timestamp: "{{ now().timestamp() }}"
